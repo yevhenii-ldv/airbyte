@@ -29,18 +29,23 @@ This section enumerates the full set of features we expect to give to these mode
 
 1. Add a source _without_ needing to write HTML. They should be responsible for only 2 things:
    1. Define Configuration: define a json object which describes which properties need to be collected by a user. Then the UI figures out how to render it.
-      1. **Note: For MVP we will only be supporting declaring the needed configuration, not the auto-rendering the UI. Someone who is implementing an integration will need to write the HTML pages for test connection and sync configurations.**
-   1. Implement: test connector, discover schema, and sync. These functions should only rely on the configurations defined in the json and should return objects that match the interfaces that are described below.
+   1. Implement: `testConnection`, `discoverSchema`, and `sync`. These functions should only rely on the configurations defined in the json and should return objects that match the interfaces that are described below.
    1. (Note: Not doing this means that we need to create custom html pages for each integration.)
 1. Support "easy" integration of singer taps
 1. A well-documented path that is easy to follow if you were the creator of a singer tap / target.
 1. Documentation on how to contribute. Also describes the interface that the contributor must code against. (**MVP**)
 
-## Two-Step Configuration
+## User Flow
 
-Some singer taps allow the user to put in some subset of the needed configuration before running a "discovery" process. The output of this discovery process is a json object (catalog.json) that can then optionally be edited and used as input configuration for the sync process. e.g. [singer postgres tap](https://github.com/singer-io/tap-postgres).
-
-Fivetran has a similar feature, where at configuration time, it detects the scheme of the data source and allows a user to select a subset of the columns discovered.
+The basic flow will go as follows:
+* Insert credentials for a source.
+* Receive feedback on whether Dataline was able to reach the source with the given credentials.
+* Insert credentials for a destination.
+* Receive feedback on whether Dataline was able to reach the destination with the given credentials.
+* Show intent to connect source to destination.
+* Receives schema of the source.
+* Selects which part of the schema will be synced.
+* Triggers a manual sync or inputs schedule on which syncs should take place.
 
 ## Source
 
