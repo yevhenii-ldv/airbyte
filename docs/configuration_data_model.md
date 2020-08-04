@@ -11,8 +11,8 @@ This section enumerates the full set of features we expect to give to these mode
 1. Discover Schema with complex configuration (e.g. multi-nested file systems)
 1. Sync Data
    1. Full refresh (**MVP**)
-   1. Append only - no concept of a primary key, simply ads new data to the end of a table. (**MVP**)???
-   1. Full deltas - detects when a record is already present in the data set and updates it. (**MVP**)???
+   1. Append only - no concept of a primary key, simply ads new data to the end of a table. (**MVP**)
+   1. Full deltas - detects when a record is already present in the data set and updates it.
    1. Historical mode - detects when a record is already present, groups it on a primary key, but retains old and new versions of the record. ([fivetran historical mode docs](https://fivetran.com/docs/getting-started/feature/history-mode))
 1. Support for "pull" connections. (**MVP**)
    1. These are all connections that can be polled.
