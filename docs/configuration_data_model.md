@@ -215,7 +215,7 @@ testConnection(SourceConnectionConfiguration) => StandardConnectionStatus
 
 #### discoverSchema
 
-Detects the schema that exists in the data source. We want the output to be standardize for easy consumption by the UI.
+Detects the schema that exists in the data source. We want the output to be standardized for easy consumption by the UI.
 
 (note: if irrelevant to an integration, this can be a no op)
 
