@@ -44,151 +44,311 @@ Fivetran has a similar feature, where at configuration time, it detects the sche
 
 ## Source
 
-The source object needs to be able to do 2 things:
+### Source Types
 
-1. **test connection**: run a process that tests that given the information provided by the user, the docker image can reach that source.
+#### SourceConnectionConfiguration
 
-   1. _input_: any credentials needed to establish a connection with the data source. this is defined _per_ source.
+Any credentials needed to establish a connection with the data source. This configuration will look difference for each source. Dataline only enforces that it is valid json-schema. Here is an example of one might look like for a postgres tap.
 
-      e.g. for postgres source
-
-      ```json
-      {
-        "required": ["host", "port", "user"],
-        "properties": {
-          "host": {
-            "type": "string",
-            "format": "hostname"
-          },
-          "port": {
-            "type": "integer"
-          },
-          "user": {
-            "type": "string",
-            "validation": "^.{0,63}$",
-            "_validation": "string less than or equal to characters"
-          },
-          "password": {
-            "type": "string",
-            "validation": "^.{0,63}$",
-            "_validation": "string less than or equal to characters"
-          },
-          "database": {
-            "type": "string"
+```json
+{
+  "description": "all configuration information needed for creating a connection.",
+  "type": "object",
+  "required": ["host", "port", "user"],
+  "properties": {
+    "host": {
+      "type": "string",
+      "format": "hostname"
+    },
+    "port": {
+      "type": "integer"
+    },
+    "user": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 63
+    },
+    "password": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 63
+    },
+    "database": {
+      "type": "string"
+    },
+    "sshConnection": {
+      "type": "object",
+      "oneOf": [
+        {
+          "title": "https",
+          "type": "null"
+        },
+        {
+          "title": "ssh",
+          "properties": {
+            "sshHost": {
+              "title": "ssh host",
+              "type": "string"
+            },
+            "sshPort": {
+              "title": "ssh port",
+              "type": "integer"
+            },
+            "sshUser": {
+              "title": "ssh user",
+              "type": "string"
+            },
+            "publicKey": {
+              "title": "public key",
+              "type": "string"
+            }
           }
         }
-      }
-      ```
+      ]
+    }
+  }
+}
+```
 
-   1. _output_: information on whether a connection was successful. this interface is the _same_ for all sources.
+#### StandardConnectionStatus
 
-      ```json
-      {
-        "connectionStatus": "failed",
-        "errorMessage": "invalid username"
-      }
-      ```
+This is the output of the `testConnection` method. It is the same schema for ALL taps.
 
-   (`connectionStatus` would be an enum of: success and failed)
+```json
+{
+  "description": "describes the result of a 'test connection' action.",
+  "type": "object",
+  "required": ["status"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["success", "failure"]
+    },
+    "message": {
+      "type": "string"
+    }
+  }
+}
+```
 
-1. **schema discovery**: run a process that can detect the schema that exists in the data source. (note: if irrelevant to an integration, this can be a no op)
-   1. input: while in the future we may potentially want to allow for custom configuration for now we will assume there is no additional user-specified configuration allowed.
-      1. the test_connection configuration will be available to the schema discovery function.
-   1. output: while in the future we may potentially want to allow for a custom output. for now we will use this standard output.
-      ```json
-      {
-        "tables": [
-          {
-            "tableName": "users",
-            "columns": [
-              {
-                "columnName": "user_id",
-                "dataType": "uuid"
-              },
-              {
-                "columnName": "name",
-                "dataType": "string"
-              },
-              {
-                "columnName": "parking_lot_number",
-                "dataType": "int"
-              }
-            ]
-          }
-        ]
-      }
-      ```
+#### StandardDiscoveryOutput
 
-## Connected Source
+This is the output of the `discoverSchema` method. It is the same schema for ALL taps.
 
-_note: picking a purposefully verbose name here for clarity. we should change it. this is an object that describes the configuration and state of data transfer to a single destination. aka a "line", a "connection"_
+The schema for the `schema` field. This will get reused elsewhere.
 
-The connected source object needs to be able to do 2 things:
-
-1.  **(manual) sync**: this includes detecting if there is in fact new data to sync. if there is, it transfers it to the destination.
-
-    1. _input_: part of this configuration will be specific to connection.
-
-       1. connection specific configuration:
-          e.g. for postgres. allows for an optional configuration where the user can specify which columns should by synced.
-
-          ```json
-          {
-            "required": [],
+```json
+{
+  "id": "http://json-schema.org/geo",
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "description": "sync configurations needed to configure a postgres tap",
+  "type": "object",
+  "definitions": {
+    "schema": {
+      "description": "describes the available schema.",
+      "type": "object",
+      "properties": {
+        "tables": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "columns"],
             "properties": {
-              "extraction_configuration": {
-                "type": "object",
-                "properties": {
-                  "tables": {
-                    "type": "list",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "tableName": {
-                          "type": "string"
-                        },
-                        "columns": {
-                          "type": "list",
-                          "items": {
-                            "type": "string"
-                          }
-                        }
-                      }
+              "name": {
+                "type": "string"
+              },
+              "columns": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "dataType"],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "dataType": {
+                      "type": "string",
+                      "enum": ["string", "number", "uuid", "boolean"]
                     }
                   }
                 }
               }
             }
           }
-          ```
-
-       1. standard configuration: will include the configuration provided in test_connection as well as the following.
-          ```json
-          {
-            "sync_mode": "full_refresh"
-          }
-          ```
-          (`sync_mode` is an enum of full_refresh and incremental)
-
-    1. _output_: the sync will output one standard object that is the same for all taps. then optionally it will also return one that is tap-specific.
-        1. standard:
-
-           ```json
-           {
-             "status": "completed",
-             "records_synced": "10",
-             "checkpoint": 1596143669
-           }
-           ```
-        1. tap-specific:
-        
-
-       (`status` will be an enum of: completed, failed, cancelled)
-
-1.  **scheduled sync**: this feature will require some additional configuration that will be standard across all pull sources. syncs triggered by scheduled sync will consume all of the same configuration as the manual sync.
-    ```json
-    {
-      "timeUnit": "days",
-      "units": 4
+        }
+      }
     }
-    ```
+  }
+}
+```
+
+```json
+{
+  "description": "describes the standard output for any discovery run.",
+  "type": "object",
+  "required": ["schema"],
+  "properties": {
+    "schema": {
+      "description": "describes the available schema.",
+      "$ref": "#/definitions/schema"
+    }
+  }
+}
+```
+
+### Source Methods
+
+The source object needs to be able to do 2 things:
+
+#### testConnection
+
+Tests that the docker image can reach that source given the information provided by the user.
+
+```
+testConnection(SourceConnectionConfiguration) => StandardConnectionStatus
+```
+
+#### discoverSchema
+
+Detects the schema that exists in the data source. We want the output to be standardize for easy consumption by the UI.
+
+(note: if irrelevant to an integration, this can be a no op)
+
+(note: we will need to write a converter to and from singer catalog.json)
+
+```
+discoverSchema(SourceConnectionConfiguration) => StandardDiscoveryOutput
+```
+
+## Destination
+
+### Destination Types
+
+#### DestinationConnectionConfiguration
+
+Same as [SourceConnectionConfiguration](#SourceConnectionConfiguration) but for the destination.
+
+### Destination Methods
+
+#### testConnection
+
+Tests that the docker image can reach that destination given the information provided by the user.
+
+```
+testConnection(DestinationConnectionConfiguration) => StandardConnectionStatus
+```
+
+## Conduit
+
+_aka: a "line", a "connection"._
+
+### Conduit Types
+
+#### StandardConduitConfiguration
+
+Configuration that is the SAME for all tap / target combinations. Describes the sync mode (full refresh or append) as well what part of the schema will be synced.
+
+```json
+{
+  "description": "configuration required for sync for ALL taps",
+  "type": "object",
+  "properties": {
+    "syncMode": {
+      "type": "string",
+      "enum": ["full_refresh", "append"]
+    },
+    "schema": {
+      "description": "describes the elements of the schema that will be synced.",
+      "$ref": "#/definitions/schema"
+    }
+  }
+}
+```
+
+(note: we may need to add some notion that some sources or destinations are only compatible with full_refresh)
+
+#### StandardConduitOutput
+
+This object tracks metadata on where the run ended. Our hope is that it can replace the ConduitState object (see [below](#ConduitState)) entirely. The reason to define this type now is so that in the UI we can provide feedback to the user on where the sync has gotten to.
+
+```json
+{
+  "description": "standard information output by ALL taps for a sync step (our version of state.json)",
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["completed", "failed", "cancelled"]
+    },
+    "recordsSynced": {
+      "type": "integer"
+    },
+    "version": {
+      "type": "integer"
+    },
+    "tables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "lastRecord": {
+            "description": "blob of the last record",
+            "type": "object"
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+#### ConduitState
+
+This field will be treated as a json blob that will _only_ be used inside the implementation of the integration. This is our escape strategy to handle any special state that needs to be tracked specially for specific taps.
+
+#### ScheduleConfiguration
+
+This object defines the schedule for a given conduit. It is the same for all taps / targets.
+
+```json
+{
+  "timeUnit": "days",
+  "units": 4
+}
+```
+
+### Conduit Methods
+
+The connected source object needs to be able to do 2 things:
+
+### (manual) sync
+
+This includes detecting if there is in fact new data to sync. if there is, it transfers it to the destination.
+
+```
+sync(
+    SourceConnectionConfiguration,
+    DestinationConnectionConfiguration,
+    StandardConduitConfiguration,
+    StandardSyncOutput,
+    ConduitState
+) => [StandardSyncOutput, ConduitState]
+```
+
+#### scheduledSync
+
+This feature will require some additional configuration that will be standard across all pull sources. syncs triggered by scheduled sync will consume all of the same configuration as the manual sync.
+
+```
+scheduleSync(
+    ScheduleConfiguration,
+    SourceConnectionConfiguration,
+    DestinationConnectionConfiguration,
+    StandardConduitConfiguration,
+    StandardSyncOutput,
+    ConduitState
+) => void
+```
