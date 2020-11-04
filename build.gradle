@@ -85,7 +85,7 @@ subprojects {
     jacocoTestReport {
         dependsOn test
     }
-    
+
     apply from: rootProject.file('tools/gradle/codestyle/spotless.gradle')
 
     dependencies {
