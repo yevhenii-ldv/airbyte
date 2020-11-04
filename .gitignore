@@ -3,7 +3,6 @@
 *.iml
 build
 .DS_Store
-data
 
 secrets
 

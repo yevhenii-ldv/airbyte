@@ -1,14 +1,28 @@
 plugins {
     id 'base'
     id 'pmd'
-    id 'com.diffplug.spotless' version '5.7.0' apply false
+    id 'com.diffplug.spotless' version '5.7.0'
     id 'ru.vyarus.use-python' version '2.2.0' apply false
 }
 
 apply from: rootProject.file('gradle/version.gradle')
 
+spotless {
+    groovyGradle {
+        target  '*.gradle',
+                'gradle/**/*.gradle',
+                'tools/gradle/**/*.gradle'
+    }
+    format 'styling', {
+        target '*.json', '*.yaml'
+        prettier()
+    }
+}
+check.dependsOn 'spotlessApply'
+
 subprojects {
     apply from: rootProject.file('gradle/subprojects_init.gradle')
+    apply from: rootProject.file('tools/gradle/codestyle/spotless.gradle')
 
     afterEvaluate { project ->
         composeBuild.dependsOn(project.tasks.assemble)
@@ -53,8 +67,6 @@ subprojects {
     jacocoTestReport {
         dependsOn test
     }
-
-    apply from: rootProject.file('tools/gradle/codestyle/spotless.gradle')
 
     dependencies {
         if (project.name != 'airbyte-commons') {

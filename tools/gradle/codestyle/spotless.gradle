@@ -23,12 +23,20 @@ def createJavaLicenseWith = { license ->
     return createLicenseWith(license, '/*', ' */', " * ")
 }
 
+def excludes = [
+    'build/*',
+    'node_modules/*',
+    '.eggs/*',
+    '.mypy_cache/*',
+    '.venv/*',
+].collect { project.file(it).path }
+
 spotless {
     ratchetFrom 'origin/master'
 
     java {
-        target '**/*.java'
-        targetExclude '**/build/**/*', '**/.gradle/**/*'
+        target 'src/**/*.java'
+        targetExclude excludes
 
         importOrder()
 
@@ -39,25 +47,26 @@ spotless {
         trimTrailingWhitespace()
     }
     groovyGradle {
-        target '**/*.gradle'
-        targetExclude '**/build/**/*', '**/.gradle/**/*'
+        target '*.gradle'
+        targetExclude excludes
     }
     sql {
         target '**/*.sql'
-        targetExclude '**/build/**/*', '**/.gradle/**/*'
+        targetExclude excludes
 
         dbeaver().configFile(rootProject.file('tools/gradle/codestyle/sql-dbeaver.properties'))
     }
     python {
         target '**/*.py'
-        targetExclude '**/build/**/*', '**/.gradle/**/*', '**/.venv/**/*', '**/.eggs/**/*', '**/.mypy_cache/**/*'
+        targetExclude excludes
+
         licenseHeaderFile createPythonLicenseWith(rootProject.file('LICENSE')), '(from|import|# generated)'
     }
-//    format 'styling', {
-//        target '**/*.json', '**/*.yaml'
-//        targetExclude '**/build/**/*', '**/node_modules/**/*', '**/.gradle/**/*'
-//
-//        prettier()
-//    }
+    format 'styling', {
+        target '**/*.json', '**/*.yaml'
+        targetExclude excludes
+
+        prettier()
+    }
 }
 check.dependsOn 'spotlessCheck'
