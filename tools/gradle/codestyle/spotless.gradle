@@ -1,0 +1,63 @@
+apply plugin: 'com.diffplug.spotless'
+
+def createLicenseWith = { File license, String startComment, String endComment, String lineComment ->
+    def tmp = File.createTempFile('tmp', '.tmp')
+    tmp.withWriter {
+        def w = it
+        w.writeLine(startComment)
+        license.eachLine {
+            w << lineComment
+            w.writeLine(it)
+        }
+        w.writeLine(endComment)
+        w.writeLine("")
+    }
+    return tmp
+}
+
+def createPythonLicenseWith = { license ->
+    return createLicenseWith(license, '"""', '"""', "")
+}
+
+def createJavaLicenseWith = { license ->
+    return createLicenseWith(license, '/*', ' */', " * ")
+}
+
+spotless {
+    ratchetFrom 'origin/master'
+
+    java {
+        target '**/*.java'
+        targetExclude '**/build/**/*', '**/.gradle/**/*'
+
+        importOrder()
+
+        eclipse('4.16.0').configFile(rootProject.file('tools/gradle/codestyle/java-google-style.xml'))
+
+        licenseHeaderFile createJavaLicenseWith(rootProject.file('LICENSE'))
+        removeUnusedImports()
+        trimTrailingWhitespace()
+    }
+    groovyGradle {
+        target '**/*.gradle'
+        targetExclude '**/build/**/*', '**/.gradle/**/*'
+    }
+    sql {
+        target '**/*.sql'
+        targetExclude '**/build/**/*', '**/.gradle/**/*'
+
+        dbeaver().configFile(rootProject.file('tools/gradle/codestyle/sql-dbeaver.properties'))
+    }
+    python {
+        target '**/*.py'
+        targetExclude '**/build/**/*', '**/.gradle/**/*', '**/.venv/**/*', '**/.eggs/**/*', '**/.mypy_cache/**/*'
+        licenseHeaderFile createPythonLicenseWith(rootProject.file('LICENSE')), '(from|import|# generated)'
+    }
+//    format 'styling', {
+//        target '**/*.json', '**/*.yaml'
+//        targetExclude '**/build/**/*', '**/node_modules/**/*', '**/.gradle/**/*'
+//
+//        prettier()
+//    }
+}
+check.dependsOn 'spotlessApply'
