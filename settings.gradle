@@ -1,3 +1,5 @@
+import groovy.io.FileType
+
 // Configure the gradle enterprise plugin to enable build scans. Enabling the plugin at the top of the settings file allows the build scan to record
 // as much information as possible.
 plugins {
@@ -11,33 +13,20 @@ gradleEnterprise {
     }
 }
 
-import groovy.io.FileType
-
 rootProject.name = 'airbyte'
 
-include ':airbyte-analytics'
-include ':airbyte-api'
-include ':airbyte-commons'
-include ':airbyte-config:models'
-include ':airbyte-config:init'
-include ':airbyte-config:persistence'
-include ':airbyte-db'
-include ':airbyte-integrations'
-include ':airbyte-json-validation'
-include ':airbyte-protocol:models'
-include ':airbyte-queue'
-include ':airbyte-scheduler'
-include ':airbyte-server'
-include ':airbyte-webapp'
-include ':airbyte-workers'
-include ':airbyte-tests'
-include ':airbyte-test-utils'
+def projects = []
 
-//// include all integration subprojects
-//def integrationsPath = rootDir.toPath().resolve('airbyte-integrations')
-//integrationsPath.eachFileRecurse(FileType.FILES) { path ->
-//    def relativePath = integrationsPath.relativize(path)
-//    if (path.endsWith('build.gradle') && !path.contains("build") && relativePath.getNameCount() > 1) {
-//        include ":airbyte-integrations:${relativePath.parent.join(':')}"
-//    }
-//}
+def rootPath = rootDir.toPath()
+rootPath.eachFileRecurse(FileType.FILES) { path ->
+    def relativePath = rootPath.relativize(path)
+    if (relativePath.endsWith('build.gradle') && relativePath.getParent()) {
+        def projectName = ":${relativePath.parent.join(':')}"
+        if (!projectName.contains(':build:') && !projectName.contains(':airbyte-integrations:')) {
+            projects.add(":${relativePath.parent.join(':')}")
+        }
+    }
+}
+projects.sort(true)
+
+include(*projects)
