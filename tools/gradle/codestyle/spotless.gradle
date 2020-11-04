@@ -69,4 +69,4 @@ spotless {
         prettier()
     }
 }
-check.dependsOn 'spotlessCheck'
+check.dependsOn 'spotlessApply'
