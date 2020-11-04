@@ -1,4 +1,5 @@
 plugins {
+    id 'base'
     id 'pmd'
     id 'com.diffplug.spotless' version '5.7.0' apply false
     id 'ru.vyarus.use-python' version '2.2.0' apply false
@@ -99,6 +100,7 @@ task composeBuild {
         }
     }
 }
+build.dependsOn(composeBuild)
 
 // produce reproducible archives
 // (see https://docs.gradle.org/current/userguide/working_with_files.html#sec:reproducible_archives)
