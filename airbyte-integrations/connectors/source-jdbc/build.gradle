@@ -21,6 +21,5 @@ application {
     mainClass = 'io.airbyte.integrations.source.jdbc.JdbcSource'
 }
 
-buildImage.dependsOn(assemble)
 buildImage.dependsOn(':airbyte-integrations:bases:base-java:buildImage')
 integrationTest.dependsOn(buildImage)

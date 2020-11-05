@@ -21,6 +21,5 @@ application {
     mainClass = 'io.airbyte.integrations.destination.postgres.PostgresDestination'
 }
 
-buildImage.dependsOn(assemble)
 buildImage.dependsOn(':airbyte-integrations:bases:base-java:buildImage')
 integrationTest.dependsOn(buildImage)

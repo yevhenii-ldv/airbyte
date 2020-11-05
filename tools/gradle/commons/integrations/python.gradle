@@ -27,21 +27,23 @@ task isortFormat(type: PythonTask) {
     command = ". --settings-file ${rootProject.file('tools/python/.isort.cfg').absolutePath}"
 }
 
-task flakeCheck(type: PythonTask, dependsOn: blackFormat) {
+task flakeCheck(type: PythonTask) {
     module = "flake8"
     command = ". --config ${rootProject.file('tools/python/.flake8').absolutePath}"
 }
+check.dependsOn flakeCheck
 
 if (project.ext.has('pyModule')) {
-    task mypyCheck(type: PythonTask, dependsOn: installReqs) {
+    task mypyCheck(type: PythonTask) {
         module = "mypy"
         command = "-m ${project.ext.pyModule} --config-file ${rootProject.file('tools/python/.mypy.ini').absolutePath}"
+
+        dependsOn installReqs
     }
 
     check.dependsOn mypyCheck
 }
 
-build.dependsOn installReqs
-check.dependsOn blackFormat
-check.dependsOn isortFormat
-check.dependsOn flakeCheck
+task pythonLint {
+    dependsOn blackFormat, isortFormat
+}

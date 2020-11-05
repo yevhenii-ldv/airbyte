@@ -30,4 +30,3 @@ buildImage.dependsOn ':airbyte-integrations:bases:base-python:buildImage'
 integrationTest.dependsOn(buildImage)
 
 buildTestImage.dependsOn ':airbyte-integrations:bases:base-python-test:buildImage'
-standardSourceTestPython.dependsOn(buildTestImage)

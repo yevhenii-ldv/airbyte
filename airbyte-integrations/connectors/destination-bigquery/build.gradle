@@ -22,6 +22,5 @@ application {
     mainClass = 'io.airbyte.integrations.destination.bigquery.BigQueryDestination'
 }
 
-buildImage.dependsOn(assemble)
 buildImage.dependsOn(':airbyte-integrations:bases:base-java:buildImage')
 integrationTest.dependsOn(buildImage)
