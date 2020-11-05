@@ -22,8 +22,9 @@ rootPath.eachFileRecurse(FileType.FILES) { path ->
     def relativePath = rootPath.relativize(path)
     if (relativePath.endsWith('build.gradle') && relativePath.getParent()) {
         def projectName = ":${relativePath.parent.join(':')}"
-        if (!projectName.contains(':build:') /*&& !projectName.contains(':airbyte-integrations:')*/ ) {
-            projects.add(":${relativePath.parent.join(':')}")
+        if (!projectName.contains(':build:')) {
+            println(projectName)
+            projects.add(projectName)
         }
     }
 }
