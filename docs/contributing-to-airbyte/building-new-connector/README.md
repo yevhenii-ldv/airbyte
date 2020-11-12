@@ -13,16 +13,15 @@ Before you can start building your own connector, you need to understand [Airbyt
 
 First, make sure you built the project by running
 
-```text
+```shell script
 ./gradlew build
 ```
 
 from the project root directory \(more details on [developing locally](../developing-locally.md)\).
 
-Then, from the `airbyte-integrations/connector-templates/generator` directory, run:
-
-```text
-npm run generate
+Then run:
+```shell script
+./tools/connectors/manage.sh create
 ```
 
 and follow the interactive prompt.
@@ -43,16 +42,15 @@ Once you've finished iterating on the changes to a connector as specified in its
    * `STANDARD_DESTINATION_DEFINITION` if it is a destination.
 3. Build the connector with the semantic version tag locally:
 
-   ```text
-   ./tools/integrations/manage.sh build airbyte-integrations/connectors/<connector-name>
+   ```shell script
+   ./tools/connectors/manage.sh build airbyte-integrations/connectors/<connector-name>
    ```
 
 4. Submit a PR containing the changes you made.
 5. One of Airbyte maintainers will review the change and publish the new version of the connector do Docker hub:
 
-   ```text
-   ./tools/integrations/manage.sh publish airbyte-integrations/connectors/<connector-name>
+   ```shell script
+   ./tools/connectors/manage.sh publish airbyte-integrations/connectors/<connector-name>
    ```
 
 6. The new version of the connector is now available for everyone who uses it. Thank you!
-

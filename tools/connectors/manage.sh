@@ -12,6 +12,10 @@ _get_rule_base() {
 _check_tag_exists() {
   DOCKER_CLI_EXPERIMENTAL=enabled docker manifest inspect "$1" > /dev/null
 }
+cmd_create() {
+  cd airbyte-integrations/connector-templates/generator
+  npm run generate
+}
 
 cmd_build() {
   local path=$1
@@ -49,7 +53,9 @@ cmd_publish() {
 
 USAGE="
 
-Usage: $(basename $0) <build|publish> <integration_root_path>
+Usage: $(basename $0)
+  <create>
+  <build|publish> <integration_root_path>
 "
 
 main() {
@@ -57,12 +63,18 @@ main() {
 
   local cmd=$1
   shift || error "Missing cmd $USAGE"
-  local path=$1
-  shift || error "Missing target (root path of integration) $USAGE"
 
-  [ -d "$path" ] || error "Path must be the root path of the integration"
-
-  cmd_"$cmd" "$path"
+  if [ "$cmd" = "create" ]; then
+    cmd_create
+  elif [ "$cmd" = "build" ]; then
+    local path; path=$1; shift || error "Missing target (root path of integration) $USAGE"
+    cmd_build "$path"
+  elif [ "$cmd" = "publish" ]; then
+    local path; path=$1; shift || error "Missing target (root path of integration) $USAGE"
+    cmd_publish "$path"
+  else
+    error "Unknown command: $cmd $USAGE"
+  fi
 }
 
 main "$@"
