@@ -22,5 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-def test_example_method():
-    assert True
+from base_python import BaseSource
+
+from .client import Client
+
+
+class SourceJira(BaseSource):
+    client_class = Client

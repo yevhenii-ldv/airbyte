@@ -22,5 +22,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-def test_example_method():
-    assert True
+from setuptools import find_packages, setup
+
+setup(
+    name="source_jira",
+    description="Source implementation for Jira.",
+    author="Airbyte",
+    author_email="contact@airbyte.io",
+    packages=find_packages(),
+    install_requires=[
+        "airbyte-protocol",
+        "base-python",
+        "requests",
+    ],
+    package_data={"": ["*.json", "schemas/*.json"]},
+    setup_requires=["pytest-runner"],
+    tests_require=["pytest"],
+    extras_require={
+        "tests": ["airbyte_python_test", "pytest"],
+    },
+)
